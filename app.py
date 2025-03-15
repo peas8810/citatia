@@ -10,11 +10,18 @@ import nltk
 import re
 import requests
 import spacy
+import spacy.cli
+
+# Baixa o modelo caso não esteja disponível
+try:
+    nlp = spacy.load("pt_core_news_sm")
+except OSError:
+    spacy.cli.download("pt_core_news_sm")
+    nlp = spacy.load("pt_core_news_sm")
 
 nltk.download('stopwords')
 
 STOP_WORDS = set(stopwords.words('portuguese'))
-nlp = spacy.load("pt_core_news_sm")
 
 # URLs das APIs
 SEMANTIC_API = "https://api.semanticscholar.org/graph/v1/paper/search"
@@ -99,39 +106,6 @@ def identify_theme(user_text):
     keyword_freq = Counter(keywords).most_common(10)
     return ", ".join([word for word, freq in keyword_freq])
 
-# Função para gerar relatório detalhado com artigos, frases e sugestões
-def generate_report(suggested_sentences, suggested_phrases, tema, probabilidade, descricao, output_path="report.pdf"):
-    doc = SimpleDocTemplate(output_path, pagesize=A4)
-    styles = getSampleStyleSheet()
-
-    justified_style = ParagraphStyle(
-        'Justified',
-        parent=styles['BodyText'],
-        alignment=4,
-        spaceAfter=10,
-    )
-
-    content = [
-        Paragraph("<b>Relatório de Sugestão de Melhorias no Artigo</b>", styles['Title']),
-        Paragraph(f"<b>Tema Identificado com base nas principais palavras do artigo:</b> {tema}", justified_style),
-        Paragraph(f"<b>Probabilidade do artigo ser uma referência:</b> {probabilidade}%", justified_style),
-        Paragraph(f"<b>Explicação:</b> {descricao}", justified_style)
-    ]
-
-    content.append(Paragraph("<b>Artigos mais acessados e/ou citados nos últimos 5 anos:</b>", styles['Heading3']))
-    if suggested_phrases:
-        for item in suggested_phrases:
-            content.append(Paragraph(f"• {item['phrase']}<br/><b>DOI:</b> {item['doi']}<br/><b>Link:</b> {item['link']}", justified_style))
-
-    content.append(Paragraph("<b>Frases recomendadas para enriquecer seu artigo:</b>", styles['Heading3']))
-    if suggested_sentences:
-        for sentence in suggested_sentences:
-            content.append(Paragraph(f"• {sentence}", justified_style))
-    else:
-        content.append(Paragraph("Nenhuma sugestão de frase relevante encontrada.", justified_style))
-
-    doc.build(content)
-
 # Interface com Streamlit
 def main():
     st.title("Citatia - Analisador de Artigos Acadêmicos")
@@ -157,7 +131,6 @@ def main():
         st.write(f"📈 Probabilidade de ser uma referência: {probabilidade}%")
         st.write(f"ℹ️ {descricao}")
 
-        generate_report(suggested_sentences, suggested_phrases, tema, probabilidade, descricao)
         with open("report.pdf", "rb") as file:
             st.download_button("📥 Baixar Relatório", file, "report.pdf")
 
