@@ -7,7 +7,10 @@ from reportlab.lib.pagesizes import A4
 from reportlab.platypus import Paragraph, SimpleDocTemplate
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import nltk
+import nltk.data
 
+nltk.data.path.append('/app/nltk_data')
+nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('punkt')
 
