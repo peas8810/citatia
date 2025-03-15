@@ -12,7 +12,10 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import requests
 import os
 import nltk
+import spacy.cli
 
+spacy.cli.download("pt_core_news_sm")
+nlp = spacy.load("pt_core_news_sm")
 nltk.download('stopwords')
 spacy.cli.download("pt_core_news_sm")
 nlp = spacy.load("pt_core_news_sm")
