@@ -7,9 +7,8 @@ from reportlab.lib.pagesizes import A4
 from reportlab.platypus import Paragraph, SimpleDocTemplate
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import nltk
+import re
 
-# Download do modelo 'punkt' e outros recursos
-nltk.download('punkt')
 nltk.download('stopwords')
 
 STOP_WORDS = set(stopwords.words('portuguese'))
@@ -18,7 +17,7 @@ STOP_WORDS = set(stopwords.words('portuguese'))
 def evaluate_article_relevance(publication_count):
     model = LogisticRegression()
     X = [[10], [50], [100]]
-    y = [0.9, 0.5, 0.1]  # Exemplo de probabilidades
+    y = [0.9, 0.5, 0.1]
     model.fit(X, y)
 
     probability = model.predict([[publication_count]])[0] * 100
@@ -42,8 +41,8 @@ def extract_text_from_pdf(pdf_path):
 
 # Função para identificar o tema principal do artigo
 def identify_theme(user_text):
-    words = nltk.word_tokenize(user_text)
-    keywords = [word.lower() for word in words if word.isalpha() and word.lower() not in STOP_WORDS]
+    words = re.findall(r'\b\w+\b', user_text)  # Tokenização mais leve e eficiente
+    keywords = [word.lower() for word in words if word.lower() not in STOP_WORDS]
     keyword_freq = Counter(keywords).most_common(10)
     return ", ".join([word for word, freq in keyword_freq])
 
