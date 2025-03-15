@@ -1,6 +1,6 @@
 streamlit
-pdfplumber
-nltk
 spacy
 torch
+pdfplumber
+nltk
 reportlab
