@@ -13,14 +13,15 @@ nltk.download('stopwords')
 
 STOP_WORDS = set(stopwords.words('portuguese'))
 
-# Modelo Scikit-Learn para prever chance de ser referência
+# Modelo Scikit-Learn corrigido para prever chance de ser referência
 def evaluate_article_relevance(publication_count):
     model = LogisticRegression()
     X = [[10], [50], [100]]
-    y = [0.9, 0.5, 0.1]
+    y = [1, 0, 0]  # Corrigido para valores binários para classificação
+
     model.fit(X, y)
 
-    probability = model.predict([[publication_count]])[0] * 100
+    probability = model.predict_proba([[publication_count]])[0][1] * 100
 
     if publication_count >= 100:
         descricao = "Há muitas publicações sobre este tema, reduzindo as chances do artigo se destacar."
@@ -41,7 +42,7 @@ def extract_text_from_pdf(pdf_path):
 
 # Função para identificar o tema principal do artigo
 def identify_theme(user_text):
-    words = re.findall(r'\b\w+\b', user_text)  # Tokenização mais leve e eficiente
+    words = re.findall(r'\b\w+\b', user_text)
     keywords = [word.lower() for word in words if word.lower() not in STOP_WORDS]
     keyword_freq = Counter(keywords).most_common(10)
     return ", ".join([word for word, freq in keyword_freq])
