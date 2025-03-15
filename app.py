@@ -56,21 +56,22 @@ def get_popular_phrases(query, limit=10):
 
     return suggested_phrases, total_references, total_articles
 
-# Função para calcular a probabilidade de ser uma referência
+# Função para calcular a probabilidade com faixa percentual
 def evaluate_article_relevance(total_references, total_articles):
     if total_articles == 0:
         return 0.0, "Nenhum artigo encontrado para calcular a probabilidade."
 
+    # Cálculo da probabilidade com faixas mais realistas
     probability = (total_references / total_articles) * 100
+    faixa_min = max(5, probability - 10)
+    faixa_max = min(95, probability + 10)
 
-    if probability >= 60:
-        descricao = "O tema tem alta probabilidade de destaque, com muitas referências relacionadas."
-    elif 30 <= probability < 60:
-        descricao = "O tema tem uma probabilidade moderada de destaque."
-    else:
-        descricao = "Poucas referências encontradas, o que pode indicar maior chance de originalidade e destaque."
+    descricao = "O tema apresenta uma probabilidade moderada de destaque." if 30 <= probability < 70 else \
+                "Poucas referências encontradas, o que pode indicar maior chance de originalidade." if probability < 30 else \
+                "O tema tem alta probabilidade de destaque, com muitas referências relacionadas."
 
-    return round(probability, 2), descricao
+    probabilidade_faixa = f"{faixa_min:.2f}% a {faixa_max:.2f}%"
+    return probabilidade_faixa, descricao
 
 # Função para extrair texto de um arquivo PDF
 def extract_text_from_pdf(pdf_path):
@@ -102,7 +103,7 @@ def generate_report(suggested_phrases, tema, probabilidade, descricao, output_pa
     content = [
         Paragraph("<b>Relatório de Sugestão de Melhorias no Artigo</b>", styles['Title']),
         Paragraph(f"<b>Tema Identificado com base nas principais palavras do artigo:</b> {tema}", justified_style),
-        Paragraph(f"<b>Probabilidade do artigo ser uma referência:</b> {probabilidade}%", justified_style),
+        Paragraph(f"<b>Probabilidade do artigo ser uma referência:</b> {probabilidade}", justified_style),
         Paragraph(f"<b>Explicação:</b> {descricao}", justified_style)
     ]
 
@@ -136,7 +137,7 @@ def main():
         probabilidade, descricao = evaluate_article_relevance(total_references, total_articles)
 
         st.success(f"✅ Tema identificado: {tema}")
-        st.write(f"📈 Probabilidade de ser uma referência: {probabilidade}%")
+        st.write(f"📈 Probabilidade de ser uma referência: {probabilidade}")
         st.write(f"ℹ️ {descricao}")
 
         generate_report(suggested_phrases, tema, probabilidade, descricao)
