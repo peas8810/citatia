@@ -10,8 +10,6 @@ import nltk
 
 nltk.download('stopwords')
 nltk.download('punkt')
-nltk.download('punkt')
-
 
 STOP_WORDS = set(stopwords.words('portuguese'))
 
@@ -44,7 +42,7 @@ def extract_text_from_pdf(pdf_path):
 # Função para identificar o tema principal do artigo
 def identify_theme(user_text):
     words = nltk.word_tokenize(user_text)
-    keywords = [word.lower() for word in words if word.is_alpha and word.lower() not in STOP_WORDS]
+    keywords = [word.lower() for word in words if word.isalpha() and word.lower() not in STOP_WORDS]
     keyword_freq = Counter(keywords).most_common(10)
     return ", ".join([word for word, freq in keyword_freq])
 
