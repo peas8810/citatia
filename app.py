@@ -44,7 +44,7 @@ def identify_theme(user_text):
     return ", ".join([word for word, freq in keyword_freq])
 
 # Função para gerar relatório
-def generate_report(tema, probabilidade, descricao, output_path="report.pdf"):
+def generate_report(tema, probabilidade, descricao, suggested_articles, suggested_words, output_path="report.pdf"):
     doc = SimpleDocTemplate(output_path, pagesize=A4)
     styles = getSampleStyleSheet()
 
@@ -56,9 +56,16 @@ def generate_report(tema, probabilidade, descricao, output_path="report.pdf"):
     )
 
     content = [
-        Paragraph(f"<b>Tema Identificado:</b> {tema}", justified_style),
+        Paragraph("<b>Relatório de Sugestão de Melhorias no Artigo</b>", styles['Title']),
+        Paragraph(f"<b>Tema Identificado com base nas principais palavras do artigo:</b> {tema}", justified_style),
         Paragraph(f"<b>Probabilidade do artigo ser uma referência:</b> {probabilidade}%", justified_style),
-        Paragraph(f"<b>Explicação:</b> {descricao}", justified_style)
+        Paragraph(f"<b>Explicação:</b> {descricao}", justified_style),
+
+        Paragraph("<b>Artigos mais acessados e/ou citados nos últimos 5 anos:</b>", styles['Heading3']),
+        *[Paragraph(f"• {article}", justified_style) for article in suggested_articles],
+
+        Paragraph("<b>Palavras recomendadas para adicionar:</b>", styles['Heading3']),
+        *[Paragraph(f"• {word}", justified_style) for word in suggested_words]
     ]
 
     doc.build(content)
@@ -80,11 +87,24 @@ def main():
         tema = identify_theme(user_text)
         probabilidade, descricao = evaluate_article_relevance(len(tema.split(", ")))
 
+        # Exemplo de artigos e palavras sugeridas para simular o conteúdo do relatório original
+        suggested_articles = [
+            "OS IMPACTOS DO ABANDONO AFETIVO PATERNO NO DESENVOLVIMENTO INFANTIL.",
+            "INDENIZAÇÃO POR ABANDONO AFETIVO: PROMOÇÃO DE JUSTIÇA PARA AS VÍTIMAS.",
+            "ABANDONO AFETIVO E A (IM) POSSIBILIDADE INDENIZATÓRIA."
+        ]
+
+        suggested_words = [
+            "abandono", "afetivo", "desenvolvimento",
+            "relações", "impactos", "legislação", 
+            "sociais", "familiares", "sociedade"
+        ]
+
         st.success(f"✅ Tema identificado: {tema}")
         st.write(f"📈 Probabilidade de ser uma referência: {probabilidade}%")
         st.write(f"ℹ️ {descricao}")
 
-        generate_report(tema, probabilidade, descricao)
+        generate_report(tema, probabilidade, descricao, suggested_articles, suggested_words)
         with open("report.pdf", "rb") as file:
             st.download_button("📥 Baixar Relatório", file, "report.pdf")
 
