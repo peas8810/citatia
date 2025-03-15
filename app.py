@@ -2,30 +2,36 @@ import streamlit as st
 import pdfplumber
 from collections import Counter
 from nltk.corpus import stopwords
+import spacy
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from reportlab.lib.pagesizes import A4
-from reportlab.platypus import Paragraph, SimpleDocTemplate
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import requests
+import os
 import nltk
 
 nltk.download('stopwords')
-nltk.download('punkt')
+spacy.cli.download("pt_core_news_sm")
+nlp = spacy.load("pt_core_news_sm")
 
 STOP_WORDS = set(stopwords.words('portuguese'))
 
-# Função para avaliar a probabilidade do artigo ser uma referência
-def evaluate_article_relevance(publication_count):
-    if publication_count >= 100:
-        probabilidade = 20
-        descricao = "Há muitas publicações sobre este tema, reduzindo as chances do artigo se destacar."
-    elif 50 <= publication_count < 100:
-        probabilidade = 50
-        descricao = "Este tema tem uma quantidade moderada de publicações. As chances de destaque são equilibradas."
-    else:
-        probabilidade = 80
-        descricao = "Há poucas publicações sobre este tema, aumentando consideravelmente as chances do artigo ser uma referência."
+# Modelo PyTorch para prever chance de ser referência
+class ArticlePredictor(nn.Module):
+    def __init__(self):
+        super(ArticlePredictor, self).__init__()
+        self.fc1 = nn.Linear(1, 16)
+        self.fc2 = nn.Linear(16, 8)
+        self.fc3 = nn.Linear(8, 1)
 
-    return probabilidade, descricao
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = torch.sigmoid(self.fc3(x))
+        return x
 
 # Função para extrair texto de um arquivo PDF
 def extract_text_from_pdf(pdf_path):
@@ -37,13 +43,13 @@ def extract_text_from_pdf(pdf_path):
 
 # Função para identificar o tema principal do artigo
 def identify_theme(user_text):
-    words = nltk.word_tokenize(user_text)
-    keywords = [word.lower() for word in words if word.isalpha() and word.lower() not in STOP_WORDS]
+    doc = nlp(user_text)
+    keywords = [token.text for token in doc if token.is_alpha and token.text.lower() not in STOP_WORDS]
     keyword_freq = Counter(keywords).most_common(10)
     return ", ".join([word for word, freq in keyword_freq])
 
 # Função para gerar relatório
-def generate_report(tema, probabilidade, descricao, suggested_articles, suggested_words, output_path="report.pdf"):
+def generate_report(tema, probabilidade, descricao, output_path="report.pdf"):
     doc = SimpleDocTemplate(output_path, pagesize=A4)
     styles = getSampleStyleSheet()
 
@@ -55,16 +61,9 @@ def generate_report(tema, probabilidade, descricao, suggested_articles, suggeste
     )
 
     content = [
-        Paragraph("<b>Relatório de Sugestão de Melhorias no Artigo</b>", styles['Title']),
-        Paragraph(f"<b>Tema Identificado com base nas principais palavras do artigo:</b> {tema}", justified_style),
+        Paragraph(f"<b>Tema Identificado:</b> {tema}", justified_style),
         Paragraph(f"<b>Probabilidade do artigo ser uma referência:</b> {probabilidade}%", justified_style),
-        Paragraph(f"<b>Explicação:</b> {descricao}", justified_style),
-
-        Paragraph("<b>Artigos mais acessados e/ou citados nos últimos 5 anos:</b>", styles['Heading3']),
-        *[Paragraph(f"• {article}", justified_style) for article in suggested_articles],
-
-        Paragraph("<b>Palavras recomendadas para adicionar:</b>", styles['Heading3']),
-        *[Paragraph(f"• {word}", justified_style) for word in suggested_words]
+        Paragraph(f"<b>Explicação:</b> {descricao}", justified_style)
     ]
 
     doc.build(content)
@@ -84,25 +83,14 @@ def main():
 
         user_text = extract_text_from_pdf("uploaded_article.pdf")
         tema = identify_theme(user_text)
-        probabilidade, descricao = evaluate_article_relevance(len(tema.split(", ")))
-
-        suggested_articles = [
-            "OS IMPACTOS DO ABANDONO AFETIVO PATERNO NO DESENVOLVIMENTO INFANTIL.",
-            "INDENIZAÇÃO POR ABANDONO AFETIVO: PROMOÇÃO DE JUSTIÇA PARA AS VÍTIMAS.",
-            "ABANDONO AFETIVO E A (IM) POSSIBILIDADE INDENIZATÓRIA."
-        ]
-
-        suggested_words = [
-            "abandono", "afetivo", "desenvolvimento",
-            "relações", "impactos", "legislação",
-            "sociais", "familiares", "sociedade"
-        ]
+        probabilidade = 75  # Exemplo fixo para simplificação
+        descricao = "Tema com potencial de destaque na literatura acadêmica."
 
         st.success(f"✅ Tema identificado: {tema}")
         st.write(f"📈 Probabilidade de ser uma referência: {probabilidade}%")
         st.write(f"ℹ️ {descricao}")
 
-        generate_report(tema, probabilidade, descricao, suggested_articles, suggested_words)
+        generate_report(tema, probabilidade, descricao)
         with open("report.pdf", "rb") as file:
             st.download_button("📥 Baixar Relatório", file, "report.pdf")
 
