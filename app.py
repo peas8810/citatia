@@ -7,16 +7,10 @@ from reportlab.lib.pagesizes import A4
 from reportlab.platypus import Paragraph, SimpleDocTemplate
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import nltk
-import os
-
-# Garantir que o diretório para o nltk_data seja criado e apontado corretamente
-nltk_data_path = "/app/nltk_data"
-os.makedirs(nltk_data_path, exist_ok=True)
-nltk.data.path.append(nltk_data_path)
 
 # Download do modelo 'punkt' e outros recursos
-nltk.download('punkt', download_dir=nltk_data_path)
-nltk.download('stopwords', download_dir=nltk_data_path)
+nltk.download('punkt')
+nltk.download('stopwords')
 
 STOP_WORDS = set(stopwords.words('portuguese'))
 
