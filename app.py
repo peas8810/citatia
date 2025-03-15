@@ -8,8 +8,11 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import nltk
 
+# Downloads obrigatórios para evitar erro de tokenização
 nltk.download('stopwords')
 nltk.download('punkt')
+import nltk.data
+nltk.data.path.append('/app/nltk_data')
 
 STOP_WORDS = set(stopwords.words('portuguese'))
 
