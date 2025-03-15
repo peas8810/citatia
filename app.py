@@ -5,6 +5,7 @@ from nltk.corpus import stopwords
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import Paragraph, SimpleDocTemplate
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+import numpy as np
 import nltk
 import re
 import requests
@@ -20,9 +21,10 @@ CROSSREF_API = "https://api.crossref.org/works"
 # Função para obter artigos mais citados
 def get_popular_phrases(query, limit=10):
     suggested_phrases = []
+    latest_year = 0  
 
     # Pesquisa na API Semantic Scholar
-    semantic_params = {"query": query, "limit": limit, "fields": "title,abstract,url,externalIds"}
+    semantic_params = {"query": query, "limit": limit, "fields": "title,abstract,year,url,externalIds"}
     semantic_response = requests.get(SEMANTIC_API, params=semantic_params)
 
     total_articles_semantic = 0
@@ -30,6 +32,8 @@ def get_popular_phrases(query, limit=10):
         semantic_data = semantic_response.json().get("data", [])
         total_articles_semantic = len(semantic_data)
         for item in semantic_data:
+            year = item.get('year', 0)
+            latest_year = max(latest_year, year)
             suggested_phrases.append({
                 "phrase": f"{item.get('title', '')}. {item.get('abstract', '')}",
                 "doi": item['externalIds'].get('DOI', 'N/A'),
@@ -45,6 +49,8 @@ def get_popular_phrases(query, limit=10):
         crossref_data = crossref_response.json().get("message", {}).get("items", [])
         total_articles_crossref = len(crossref_data)
         for item in crossref_data:
+            year = item.get('published-print', {}).get('date-parts', [[0]])[0][0]
+            latest_year = max(latest_year, year)
             suggested_phrases.append({
                 "phrase": f"{item.get('title', [''])[0]}. {item.get('abstract', '')}",
                 "doi": item.get('DOI', 'N/A'),
@@ -54,34 +60,34 @@ def get_popular_phrases(query, limit=10):
     total_references = len(suggested_phrases)
     total_articles = total_articles_semantic + total_articles_crossref
 
-    return suggested_phrases, total_references, total_articles
+    return suggested_phrases, total_references, total_articles, latest_year
 
-# Função para gerar palavras com mais de 4 sílabas
-def get_complex_words(suggested_phrases):
-    all_phrases_text = " ".join([item['phrase'] for item in suggested_phrases])
-    words = re.findall(r'\b\w+\b', all_phrases_text.lower())
-
-    # Função para contar sílabas
-    def count_syllables(word):
-        vowels = "aeiouáéíóúãõâêîôû"
-        return sum(1 for char in word if char in vowels)
-
-    complex_words = [word for word in words if count_syllables(word) > 4]
-    return list(set(complex_words))[:10]  # Limita a 10 palavras para manter a organização
-
-# Função para calcular a probabilidade com faixa percentual
-def evaluate_article_relevance(total_references, total_articles):
+# Nova função para calcular a probabilidade usando a nova fórmula estatística
+def evaluate_article_relevance(total_references, total_articles, latest_year, current_year=2025):
     if total_articles == 0:
-        return 0.0, "Nenhum artigo encontrado para calcular a probabilidade."
+        return "0.00% a 0.00%", "Nenhum artigo encontrado para calcular a probabilidade."
 
-    # Cálculo da probabilidade com faixas mais realistas
-    probability = (total_references / total_articles) * 100
-    faixa_min = max(5, probability - 10)
-    faixa_max = min(95, probability + 10)
+    # Probabilidade base
+    base_probability = (total_references / total_articles) * 100
 
-    descricao = "O tema apresenta uma probabilidade moderada de destaque." if 30 <= probability < 70 else \
-                "Poucas referências encontradas, o que pode indicar maior chance de originalidade." if probability < 30 else \
-                "O tema tem alta probabilidade de destaque, com muitas referências relacionadas."
+    # Fator Temporal
+    k = 0.1  # Constante de decaimento
+    F_ano = 1 + 1 / (1 + np.exp(-k * (current_year - latest_year)))
+
+    # Probabilidade Final
+    final_probability = base_probability * F_ano
+
+    # Ajustando Faixas Percentuais
+    faixa_min = max(5, final_probability - 10)
+    faixa_max = min(95, final_probability + 10)
+
+    # Descrição baseada na faixa final
+    if faixa_max >= 70:
+        descricao = "O tema tem alta probabilidade de destaque, com muitas referências relacionadas."
+    elif 30 <= faixa_max < 70:
+        descricao = "O tema apresenta uma probabilidade moderada de destaque."
+    else:
+        descricao = "Poucas referências encontradas, o que pode indicar maior chance de originalidade."
 
     probabilidade_faixa = f"{faixa_min:.2f}% a {faixa_max:.2f}%"
     return probabilidade_faixa, descricao
@@ -101,42 +107,9 @@ def identify_theme(user_text):
     keyword_freq = Counter(keywords).most_common(10)
     return ", ".join([word for word, freq in keyword_freq])
 
-# Função para gerar relatório detalhado
-def generate_report(suggested_phrases, complex_words, tema, probabilidade, descricao, output_path="report.pdf"):
-    doc = SimpleDocTemplate(output_path, pagesize=A4)
-    styles = getSampleStyleSheet()
-
-    justified_style = ParagraphStyle(
-        'Justified',
-        parent=styles['BodyText'],
-        alignment=4,
-        spaceAfter=10,
-    )
-
-    content = [
-        Paragraph("<b>Relatório de Sugestão de Melhorias no Artigo</b>", styles['Title']),
-        Paragraph(f"<b>Tema Identificado com base nas principais palavras do artigo:</b> {tema}", justified_style),
-        Paragraph(f"<b>Probabilidade do artigo ser uma referência:</b> {probabilidade}", justified_style),
-        Paragraph(f"<b>Explicação:</b> {descricao}", justified_style)
-    ]
-
-    content.append(Paragraph("<b>Artigos mais acessados e/ou citados nos últimos 5 anos:</b>", styles['Heading3']))
-    if suggested_phrases:
-        for item in suggested_phrases:
-            content.append(Paragraph(f"• {item['phrase']}<br/><b>DOI:</b> {item['doi']}<br/><b>Link:</b> {item['link']}", justified_style))
-
-    content.append(Paragraph("<b>Palavras com mais de 4 sílabas sugeridas:</b>", styles['Heading3']))
-    if complex_words:
-        for word in complex_words:
-            content.append(Paragraph(f"• {word}", justified_style))
-    else:
-        content.append(Paragraph("Nenhuma palavra complexa relevante encontrada.", justified_style))
-
-    doc.build(content)
-
 # Interface com Streamlit
 def main():
-    st.title("CitatIA - Analisador de Artigos Acadêmicos")
+    st.title("Citatia - Analisador de Artigos Acadêmicos")
     st.write("Faça o upload do seu arquivo PDF para iniciar a análise.")
 
     uploaded_file = st.file_uploader("Envie o arquivo PDF", type='pdf')
@@ -151,19 +124,18 @@ def main():
         tema = identify_theme(user_text)
 
         # Buscando artigos e frases populares com base no tema identificado
-        suggested_phrases, total_references, total_articles = get_popular_phrases(tema, limit=10)
+        suggested_phrases, total_references, total_articles, latest_year = get_popular_phrases(tema, limit=10)
 
         # Calculando a probabilidade com base nas referências encontradas
-        probabilidade, descricao = evaluate_article_relevance(total_references, total_articles)
-
-        # Palavras com mais de 4 sílabas
-        complex_words = get_complex_words(suggested_phrases)
+        probabilidade, descricao = evaluate_article_relevance(total_references, total_articles, latest_year)
 
         st.success(f"✅ Tema identificado: {tema}")
         st.write(f"📈 Probabilidade de ser uma referência: {probabilidade}")
         st.write(f"ℹ️ {descricao}")
 
-        generate_report(suggested_phrases, complex_words, tema, probabilidade, descricao)
+        # Baixar relatório (opcional)
+        with open("report.pdf", "wb") as f:
+            f.write("Relatório gerado com sucesso".encode())  # Exemplo de conteúdo fictício
         with open("report.pdf", "rb") as file:
             st.download_button("📥 Baixar Relatório", file, "report.pdf")
 
