@@ -2,13 +2,11 @@ import streamlit as st
 import pdfplumber
 from collections import Counter
 from nltk.corpus import stopwords
-from sklearn.linear_model import LogisticRegression
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import Paragraph, SimpleDocTemplate
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import nltk
 
-# Downloads obrigatórios para evitar erro de tokenização
 nltk.download('stopwords')
 nltk.download('punkt')
 import nltk.data
@@ -16,23 +14,19 @@ nltk.data.path.append('/app/nltk_data')
 
 STOP_WORDS = set(stopwords.words('portuguese'))
 
-# Modelo Scikit-Learn para prever chance de ser referência
+# Função corrigida para avaliar probabilidade de destaque
 def evaluate_article_relevance(publication_count):
-    model = LogisticRegression()
-    X = [[10], [50], [100]]
-    y = [0.9, 0.5, 0.1]  
-    model.fit(X, y)
-
-    probability = model.predict([[publication_count]])[0] * 100
-
     if publication_count >= 100:
+        probabilidade = 20  # Baixa probabilidade
         descricao = "Há muitas publicações sobre este tema, reduzindo as chances do artigo se destacar."
     elif 50 <= publication_count < 100:
+        probabilidade = 50  # Probabilidade moderada
         descricao = "Este tema tem uma quantidade moderada de publicações. As chances de destaque são equilibradas."
     else:
+        probabilidade = 80  # Alta probabilidade
         descricao = "Há poucas publicações sobre este tema, aumentando consideravelmente as chances do artigo ser uma referência."
 
-    return round(probability, 2), descricao
+    return probabilidade, descricao
 
 # Função para extrair texto de um arquivo PDF
 def extract_text_from_pdf(pdf_path):
