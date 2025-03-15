@@ -74,8 +74,8 @@ def evaluate_article_relevance(total_references, total_articles, latest_year, cu
     k = 0.1  # Constante de decaimento
     F_ano = 1 + 1 / (1 + np.exp(-k * (current_year - latest_year)))
 
-    # Probabilidade Final
-    final_probability = base_probability * F_ano
+    # Probabilidade Final (Garantindo que não ultrapasse 100%)
+    final_probability = min(base_probability * F_ano, 100)
 
     # Ajustando Faixas Percentuais
     faixa_min = max(5, final_probability - 10)
