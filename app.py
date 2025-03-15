@@ -13,12 +13,11 @@ nltk.download('stopwords')
 
 STOP_WORDS = set(stopwords.words('portuguese'))
 
-# Modelo Scikit-Learn corrigido para prever chance de ser referência
+# Modelo Scikit-Learn para prever chance de ser referência
 def evaluate_article_relevance(publication_count):
     model = LogisticRegression()
     X = [[10], [50], [100]]
-    y = [1, 0, 0]  # Corrigido para valores binários para classificação
-
+    y = [1, 0, 0]
     model.fit(X, y)
 
     probability = model.predict_proba([[publication_count]])[0][1] * 100
@@ -47,8 +46,8 @@ def identify_theme(user_text):
     keyword_freq = Counter(keywords).most_common(10)
     return ", ".join([word for word, freq in keyword_freq])
 
-# Função para gerar relatório
-def generate_report(tema, probabilidade, descricao, output_path="report.pdf"):
+# Função para gerar relatório detalhado com artigos, frases e sugestões
+def generate_report(suggested_sentences, suggested_phrases, tema, probabilidade, descricao, output_path="report.pdf"):
     doc = SimpleDocTemplate(output_path, pagesize=A4)
     styles = getSampleStyleSheet()
 
@@ -59,11 +58,23 @@ def generate_report(tema, probabilidade, descricao, output_path="report.pdf"):
         spaceAfter=10,
     )
 
-    content = [
-        Paragraph(f"<b>Tema Identificado:</b> {tema}", justified_style),
-        Paragraph(f"<b>Probabilidade do artigo ser uma referência:</b> {probabilidade}%", justified_style),
-        Paragraph(f"<b>Explicação:</b> {descricao}", justified_style)
-    ]
+    content = []
+    content.append(Paragraph("<b>Relatório de Sugestão de Melhorias no Artigo</b>", styles['Title']))
+    content.append(Paragraph(f"<b>Tema Identificado com base nas principais palavras do artigo:</b> {tema}", justified_style))
+    content.append(Paragraph(f"<b>Probabilidade do artigo ser uma referência:</b> {probabilidade}%", justified_style))
+    content.append(Paragraph(f"<b>Explicação:</b> {descricao}", justified_style))
+
+    content.append(Paragraph("<b>Artigos mais acessados e/ou citados nos últimos 5 anos:</b>", styles['Heading3']))
+    if suggested_phrases:
+        for item in suggested_phrases:
+            content.append(Paragraph(f"• {item['phrase']}<br/><b>DOI:</b> {item['doi']}<br/><b>Link:</b> {item['link']}", justified_style))
+
+    content.append(Paragraph("<b>Palavras recomendadas para adicionar:</b>", styles['Heading3']))
+    if suggested_sentences:
+        for sentence in suggested_sentences:
+            content.append(Paragraph(f"• {sentence}", justified_style))
+    else:
+        content.append(Paragraph("Nenhuma sugestão de frase relevante encontrada.", justified_style))
 
     doc.build(content)
 
@@ -84,11 +95,23 @@ def main():
         tema = identify_theme(user_text)
         probabilidade, descricao = evaluate_article_relevance(len(tema.split(", ")))
 
+        # Exemplos fictícios para teste da nova funcionalidade
+        suggested_phrases = [
+            {"phrase": "Impactos ambientais em áreas urbanas", "doi": "10.1234/abcd123", "link": "https://doi.org/10.1234/abcd123"},
+            {"phrase": "Sustentabilidade na construção civil", "doi": "10.5678/wxyz456", "link": "https://doi.org/10.5678/wxyz456"}
+        ]
+
+        suggested_sentences = [
+            "Sistemas ecológicos sustentáveis",
+            "Técnicas avançadas de aproveitamento energético",
+            "Estudos recentes sobre gestão hídrica"
+        ]
+
         st.success(f"✅ Tema identificado: {tema}")
         st.write(f"📈 Probabilidade de ser uma referência: {probabilidade}%")
         st.write(f"ℹ️ {descricao}")
 
-        generate_report(tema, probabilidade, descricao)
+        generate_report(suggested_sentences, suggested_phrases, tema, probabilidade, descricao)
         with open("report.pdf", "rb") as file:
             st.download_button("📥 Baixar Relatório", file, "report.pdf")
 
