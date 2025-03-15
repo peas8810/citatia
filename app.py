@@ -11,6 +11,10 @@ import re
 import requests
 import spacy
 
+import spacy.cli
+spacy.cli.download("pt_core_news_sm")
+nlp = spacy.load("pt_core_news_sm")
+
 nltk.download('stopwords')
 
 STOP_WORDS = set(stopwords.words('portuguese'))
