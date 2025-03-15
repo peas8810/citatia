@@ -1,4 +1,3 @@
-spacy
 streamlit
 pdfplumber
 nltk
