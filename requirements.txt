@@ -3,3 +3,4 @@ pdfplumber
 nltk
 scikit-learn
 reportlab
+nltk==3.8.1
