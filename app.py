@@ -56,6 +56,19 @@ def get_popular_phrases(query, limit=10):
 
     return suggested_phrases, total_references, total_articles
 
+# Função para gerar palavras com mais de 4 sílabas
+def get_complex_words(suggested_phrases):
+    all_phrases_text = " ".join([item['phrase'] for item in suggested_phrases])
+    words = re.findall(r'\b\w+\b', all_phrases_text.lower())
+
+    # Função para contar sílabas
+    def count_syllables(word):
+        vowels = "aeiouáéíóúãõâêîôû"
+        return sum(1 for char in word if char in vowels)
+
+    complex_words = [word for word in words if count_syllables(word) > 4]
+    return list(set(complex_words))[:10]  # Limita a 10 palavras para manter a organização
+
 # Função para calcular a probabilidade com faixa percentual
 def evaluate_article_relevance(total_references, total_articles):
     if total_articles == 0:
@@ -89,7 +102,7 @@ def identify_theme(user_text):
     return ", ".join([word for word, freq in keyword_freq])
 
 # Função para gerar relatório detalhado
-def generate_report(suggested_phrases, tema, probabilidade, descricao, output_path="report.pdf"):
+def generate_report(suggested_phrases, complex_words, tema, probabilidade, descricao, output_path="report.pdf"):
     doc = SimpleDocTemplate(output_path, pagesize=A4)
     styles = getSampleStyleSheet()
 
@@ -111,6 +124,13 @@ def generate_report(suggested_phrases, tema, probabilidade, descricao, output_pa
     if suggested_phrases:
         for item in suggested_phrases:
             content.append(Paragraph(f"• {item['phrase']}<br/><b>DOI:</b> {item['doi']}<br/><b>Link:</b> {item['link']}", justified_style))
+
+    content.append(Paragraph("<b>Palavras com mais de 4 sílabas sugeridas:</b>", styles['Heading3']))
+    if complex_words:
+        for word in complex_words:
+            content.append(Paragraph(f"• {word}", justified_style))
+    else:
+        content.append(Paragraph("Nenhuma palavra complexa relevante encontrada.", justified_style))
 
     doc.build(content)
 
@@ -136,11 +156,14 @@ def main():
         # Calculando a probabilidade com base nas referências encontradas
         probabilidade, descricao = evaluate_article_relevance(total_references, total_articles)
 
+        # Palavras com mais de 4 sílabas
+        complex_words = get_complex_words(suggested_phrases)
+
         st.success(f"✅ Tema identificado: {tema}")
         st.write(f"📈 Probabilidade de ser uma referência: {probabilidade}")
         st.write(f"ℹ️ {descricao}")
 
-        generate_report(suggested_phrases, tema, probabilidade, descricao)
+        generate_report(suggested_phrases, complex_words, tema, probabilidade, descricao)
         with open("report.pdf", "rb") as file:
             st.download_button("📥 Baixar Relatório", file, "report.pdf")
 
