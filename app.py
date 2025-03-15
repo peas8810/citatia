@@ -8,16 +8,53 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import nltk
 import re
+import requests
 
 nltk.download('stopwords')
 
 STOP_WORDS = set(stopwords.words('portuguese'))
 
+# URLs das APIs
+SEMANTIC_API = "https://api.semanticscholar.org/graph/v1/paper/search"
+CROSSREF_API = "https://api.crossref.org/works"
+
+# Função para obter artigos mais citados
+def get_popular_phrases(query, limit=10):
+    suggested_phrases = []
+
+    # Pesquisa na API Semantic Scholar
+    semantic_params = {"query": query, "limit": limit // 3, "fields": "title,abstract,url,externalIds"}
+    semantic_response = requests.get(SEMANTIC_API, params=semantic_params)
+
+    if semantic_response.status_code == 200:
+        semantic_data = semantic_response.json().get("data", [])
+        for item in semantic_data:
+            suggested_phrases.append({
+                "phrase": f"{item.get('title', '')}. {item.get('abstract', '')}",
+                "doi": item['externalIds'].get('DOI', 'N/A'),
+                "link": item.get('url', 'N/A')
+            })
+
+    # Pesquisa na API CrossRef
+    crossref_params = {"query": query, "rows": limit // 3}
+    crossref_response = requests.get(CROSSREF_API, params=crossref_params)
+
+    if crossref_response.status_code == 200:
+        crossref_data = crossref_response.json().get("message", {}).get("items", [])
+        for item in crossref_data:
+            suggested_phrases.append({
+                "phrase": f"{item.get('title', [''])[0]}. {item.get('abstract', '')}",
+                "doi": item.get('DOI', 'N/A'),
+                "link": item.get('URL', 'N/A')
+            })
+
+    return suggested_phrases
+
 # Modelo Scikit-Learn para prever chance de ser referência
 def evaluate_article_relevance(publication_count):
     model = LogisticRegression()
     X = [[10], [50], [100]]
-    y = [1, 0, 0]
+    y = [1, 0, 0]  
     model.fit(X, y)
 
     probability = model.predict_proba([[publication_count]])[0][1] * 100
@@ -58,11 +95,12 @@ def generate_report(suggested_sentences, suggested_phrases, tema, probabilidade,
         spaceAfter=10,
     )
 
-    content = []
-    content.append(Paragraph("<b>Relatório de Sugestão de Melhorias no Artigo</b>", styles['Title']))
-    content.append(Paragraph(f"<b>Tema Identificado com base nas principais palavras do artigo:</b> {tema}", justified_style))
-    content.append(Paragraph(f"<b>Probabilidade do artigo ser uma referência:</b> {probabilidade}%", justified_style))
-    content.append(Paragraph(f"<b>Explicação:</b> {descricao}", justified_style))
+    content = [
+        Paragraph("<b>Relatório de Sugestão de Melhorias no Artigo</b>", styles['Title']),
+        Paragraph(f"<b>Tema Identificado com base nas principais palavras do artigo:</b> {tema}", justified_style),
+        Paragraph(f"<b>Probabilidade do artigo ser uma referência:</b> {probabilidade}%", justified_style),
+        Paragraph(f"<b>Explicação:</b> {descricao}", justified_style)
+    ]
 
     content.append(Paragraph("<b>Artigos mais acessados e/ou citados nos últimos 5 anos:</b>", styles['Heading3']))
     if suggested_phrases:
@@ -95,12 +133,8 @@ def main():
         tema = identify_theme(user_text)
         probabilidade, descricao = evaluate_article_relevance(len(tema.split(", ")))
 
-        # Exemplos fictícios para teste da nova funcionalidade
-        suggested_phrases = [
-            {"phrase": "Impactos ambientais em áreas urbanas", "doi": "10.1234/abcd123", "link": "https://doi.org/10.1234/abcd123"},
-            {"phrase": "Sustentabilidade na construção civil", "doi": "10.5678/wxyz456", "link": "https://doi.org/10.5678/wxyz456"}
-        ]
-
+        # Buscando artigos e frases populares com base no tema identificado
+        suggested_phrases = get_popular_phrases(tema, limit=10)
         suggested_sentences = [
             "Sistemas ecológicos sustentáveis",
             "Técnicas avançadas de aproveitamento energético",
