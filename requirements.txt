@@ -1,6 +1,6 @@
 streamlit
 pdfplumber
 nltk
-scikit-learn
 reportlab
 requests
+numpy
