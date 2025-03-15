@@ -2,5 +2,5 @@ streamlit
 pdfplumber
 nltk
 spacy
-torch
+torch==2.1.0
 reportlab
