@@ -1,6 +1,5 @@
 streamlit
-spacy
-torch
 pdfplumber
 nltk
+scikit-learn
 reportlab
