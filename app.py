@@ -5,25 +5,24 @@ from nltk.corpus import stopwords
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import Paragraph, SimpleDocTemplate
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+import requests
 import nltk
 
 nltk.download('stopwords')
 nltk.download('punkt')
-import nltk.data
-nltk.data.path.append('/app/nltk_data')
 
 STOP_WORDS = set(stopwords.words('portuguese'))
 
-# Função corrigida para avaliar probabilidade de destaque
+# Função para avaliar a probabilidade do artigo ser uma referência
 def evaluate_article_relevance(publication_count):
     if publication_count >= 100:
-        probabilidade = 20  # Baixa probabilidade
+        probabilidade = 20
         descricao = "Há muitas publicações sobre este tema, reduzindo as chances do artigo se destacar."
     elif 50 <= publication_count < 100:
-        probabilidade = 50  # Probabilidade moderada
+        probabilidade = 50
         descricao = "Este tema tem uma quantidade moderada de publicações. As chances de destaque são equilibradas."
     else:
-        probabilidade = 80  # Alta probabilidade
+        probabilidade = 80
         descricao = "Há poucas publicações sobre este tema, aumentando consideravelmente as chances do artigo ser uma referência."
 
     return probabilidade, descricao
@@ -87,7 +86,6 @@ def main():
         tema = identify_theme(user_text)
         probabilidade, descricao = evaluate_article_relevance(len(tema.split(", ")))
 
-        # Exemplo de artigos e palavras sugeridas para simular o conteúdo do relatório original
         suggested_articles = [
             "OS IMPACTOS DO ABANDONO AFETIVO PATERNO NO DESENVOLVIMENTO INFANTIL.",
             "INDENIZAÇÃO POR ABANDONO AFETIVO: PROMOÇÃO DE JUSTIÇA PARA AS VÍTIMAS.",
@@ -96,7 +94,7 @@ def main():
 
         suggested_words = [
             "abandono", "afetivo", "desenvolvimento",
-            "relações", "impactos", "legislação", 
+            "relações", "impactos", "legislação",
             "sociais", "familiares", "sociedade"
         ]
 
