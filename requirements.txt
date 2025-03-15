@@ -1,1 +1,7 @@
+streamlit
+pdfplumber
+nltk
+spacy
+torch
+reportlab
 
