@@ -66,8 +66,11 @@ def generate_suggested_sentences(suggested_phrases):
 # Modelo Scikit-Learn para prever chance de ser referência
 def evaluate_article_relevance(publication_count):
     model = LogisticRegression()
-    X = [[10], [50], [100]]
-    y = [1, 0, 0]  
+    
+    # Conjunto de dados expandido para melhorar a precisão
+    X = [[5], [15], [30], [50], [70], [100], [150], [200]]
+    y = [1, 1, 1, 0, 0, 0, 0, 0]
+
     model.fit(X, y)
 
     probability = model.predict_proba([[publication_count]])[0][1] * 100
