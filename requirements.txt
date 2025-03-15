@@ -1,7 +1,7 @@
+spacy
 streamlit
 pdfplumber
 nltk
 scikit-learn
 reportlab
-spacy
 requests
