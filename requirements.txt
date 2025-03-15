@@ -1,6 +1,6 @@
-streamlit
-pdfplumber
-nltk
-spacy
+streamlit==1.30.0
+pdfplumber==0.10.2
+nltk==3.8.1
+spacy==3.6.1
 torch==2.1.0
-reportlab
+reportlab==3.6.13
