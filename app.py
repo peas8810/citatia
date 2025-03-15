@@ -2,36 +2,34 @@ import streamlit as st
 import pdfplumber
 from collections import Counter
 from nltk.corpus import stopwords
-import spacy
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+from sklearn.linear_model import LogisticRegression
 from reportlab.lib.pagesizes import A4
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+from reportlab.platypus import Paragraph, SimpleDocTemplate
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-import requests
-import os
 import nltk
 
 nltk.download('stopwords')
-spacy.cli.download("pt_core_news_sm")
-nlp = spacy.load("pt_core_news_sm")
+nltk.download('punkt')
 
 STOP_WORDS = set(stopwords.words('portuguese'))
 
-# Modelo PyTorch para prever chance de ser referência
-class ArticlePredictor(nn.Module):
-    def __init__(self):
-        super(ArticlePredictor, self).__init__()
-        self.fc1 = nn.Linear(1, 16)
-        self.fc2 = nn.Linear(16, 8)
-        self.fc3 = nn.Linear(8, 1)
+# Modelo Scikit-Learn para prever chance de ser referência
+def evaluate_article_relevance(publication_count):
+    model = LogisticRegression()
+    X = [[10], [50], [100]]
+    y = [0.9, 0.5, 0.1]  
+    model.fit(X, y)
 
-    def forward(self, x):
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = torch.sigmoid(self.fc3(x))
-        return x
+    probability = model.predict([[publication_count]])[0] * 100
+
+    if publication_count >= 100:
+        descricao = "Há muitas publicações sobre este tema, reduzindo as chances do artigo se destacar."
+    elif 50 <= publication_count < 100:
+        descricao = "Este tema tem uma quantidade moderada de publicações. As chances de destaque são equilibradas."
+    else:
+        descricao = "Há poucas publicações sobre este tema, aumentando consideravelmente as chances do artigo ser uma referência."
+
+    return round(probability, 2), descricao
 
 # Função para extrair texto de um arquivo PDF
 def extract_text_from_pdf(pdf_path):
@@ -43,8 +41,8 @@ def extract_text_from_pdf(pdf_path):
 
 # Função para identificar o tema principal do artigo
 def identify_theme(user_text):
-    doc = nlp(user_text)
-    keywords = [token.text for token in doc if token.is_alpha and token.text.lower() not in STOP_WORDS]
+    words = nltk.word_tokenize(user_text)
+    keywords = [word.lower() for word in words if word.is_alpha and word.lower() not in STOP_WORDS]
     keyword_freq = Counter(keywords).most_common(10)
     return ", ".join([word for word, freq in keyword_freq])
 
@@ -83,8 +81,7 @@ def main():
 
         user_text = extract_text_from_pdf("uploaded_article.pdf")
         tema = identify_theme(user_text)
-        probabilidade = 75  # Exemplo fixo para simplificação
-        descricao = "Tema com potencial de destaque na literatura acadêmica."
+        probabilidade, descricao = evaluate_article_relevance(len(tema.split(", ")))
 
         st.success(f"✅ Tema identificado: {tema}")
         st.write(f"📈 Probabilidade de ser uma referência: {probabilidade}%")
