@@ -9,10 +9,12 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import nltk
 import re
 import requests
+import spacy
 
 nltk.download('stopwords')
 
 STOP_WORDS = set(stopwords.words('portuguese'))
+nlp = spacy.load("pt_core_news_sm")
 
 # URLs das APIs
 SEMANTIC_API = "https://api.semanticscholar.org/graph/v1/paper/search"
@@ -49,6 +51,20 @@ def get_popular_phrases(query, limit=10):
             })
 
     return suggested_phrases
+
+# Função para gerar frases recomendadas com base nas palavras mais comuns
+def generate_suggested_sentences(suggested_phrases):
+    all_phrases_text = " ".join([item['phrase'] for item in suggested_phrases])
+    doc = nlp(all_phrases_text)
+    words = [token.text for token in doc if token.is_alpha and token.text.lower() not in STOP_WORDS]
+    common_words = Counter(words).most_common(10)
+
+    suggested_sentences = [
+        f"Incorporar conceitos como '{word}' pode enriquecer a argumentação."
+        for word, freq in common_words
+    ]
+
+    return suggested_sentences
 
 # Modelo Scikit-Learn para prever chance de ser referência
 def evaluate_article_relevance(publication_count):
@@ -107,7 +123,7 @@ def generate_report(suggested_sentences, suggested_phrases, tema, probabilidade,
         for item in suggested_phrases:
             content.append(Paragraph(f"• {item['phrase']}<br/><b>DOI:</b> {item['doi']}<br/><b>Link:</b> {item['link']}", justified_style))
 
-    content.append(Paragraph("<b>Palavras recomendadas para adicionar:</b>", styles['Heading3']))
+    content.append(Paragraph("<b>Frases recomendadas para enriquecer seu artigo:</b>", styles['Heading3']))
     if suggested_sentences:
         for sentence in suggested_sentences:
             content.append(Paragraph(f"• {sentence}", justified_style))
@@ -135,11 +151,7 @@ def main():
 
         # Buscando artigos e frases populares com base no tema identificado
         suggested_phrases = get_popular_phrases(tema, limit=10)
-        suggested_sentences = [
-            "Sistemas ecológicos sustentáveis",
-            "Técnicas avançadas de aproveitamento energético",
-            "Estudos recentes sobre gestão hídrica"
-        ]
+        suggested_sentences = generate_suggested_sentences(suggested_phrases)
 
         st.success(f"✅ Tema identificado: {tema}")
         st.write(f"📈 Probabilidade de ser uma referência: {probabilidade}%")
