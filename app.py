@@ -136,7 +136,7 @@ def generate_report(suggested_phrases, complex_words, tema, probabilidade, descr
 
 # Interface com Streamlit
 def main():
-    st.title("Citatia - Analisador de Artigos Acadêmicos")
+    st.title("CitatIA - Analisador de Artigos Acadêmicos")
     st.write("Faça o upload do seu arquivo PDF para iniciar a análise.")
 
     uploaded_file = st.file_uploader("Envie o arquivo PDF", type='pdf')
