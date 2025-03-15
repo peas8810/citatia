@@ -10,6 +10,8 @@ import nltk
 
 nltk.download('stopwords')
 nltk.download('punkt')
+nltk.download('punkt')
+
 
 STOP_WORDS = set(stopwords.words('portuguese'))
 
