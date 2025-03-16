@@ -214,3 +214,10 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+ # Texto explicativo ao final da página
+    st.markdown("""
+    ---
+    Nosso avançado programa de detecção de plágio utiliza inteligência artificial para comparar textos com uma ampla base de dados composta pelos 100 maiores indexadores e repositórios globais, analisando cuidadosamente as similaridades encontradas. Com base em estudos internacionais, considera-se que uma taxa de similaridade de 3% ou mais indica uma alta concentração de trechos raros — ou seja, sequências de palavras pouco frequentes que apontam para uma possível cópia. Para ilustrar o processo de análise documental, imagine que um arquivo A tenha sido integralmente copiado de outro arquivo B. Ainda assim, a similaridade pode ser igual ou inferior a 50%, e não 100%, devido à variação na quantidade de trechos considerados na comparação. Pesquisas demonstram que uma taxa média de 3% ou mais costuma indicar uma elevada incidência de termos semelhantes, configurando, assim, uma possível ocorrência de plágio. É importante ressaltar que a avaliação final sobre a presença de plágio cabe sempre aos autores e responsáves pelo conteúdo.Para mais informações sobre práticas de integridade acadêmica, acesse [plagiarism.org](https://plagiarism.org).
+    """)
