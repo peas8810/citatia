@@ -124,7 +124,7 @@ def generate_report(suggested_phrases, top_keywords, tema, probabilidade, descri
     content = [
         Paragraph("<b>Relatório de Sugestão de Melhorias no Artigo - CitaIA - PEAS.Co</b>", styles['Title']),
         Paragraph(f"<b>Tema Identificado com base nas principais palavras do artigo:</b> {tema}", justified_style),
-        Paragraph(f"<b>Probabilidade do artigo ser uma referência (Cálculo feito com base no volume de artigos encontrados da área nos últimos 5 anos e a procura sobre o tema):</b> {probabilidade}%", justified_style),
+        Paragraph(f"<b>Probabilidade de o artigo se tornar uma referência (Calculada com base no volume de artigos publicados na área nos últimos cinco anos e no interesse demonstrado pelo tema nas ferramentas de busca):</b> {probabilidade}%", justified_style),
         Paragraph(f"<b>Explicação:</b> {descricao}", justified_style)
     ]
 
@@ -169,7 +169,7 @@ def main():
         probabilidade, descricao = evaluate_article_relevance(publication_count)
 
         st.success(f"✅ Tema identificado: {tema}")
-        st.write(f"📈 Probabilidade do artigo ser uma referência (Cálculo feito com base no volume de artigos encontrados da área nos últimos 5 anos e a procura sobre o tema): {probabilidade}%")
+        st.write(f"📈 Probabilidade de o artigo se tornar uma referência (Calculada com base no volume de artigos publicados na área nos últimos cinco anos e no interesse demonstrado pelo tema nas ferramentas de busca): {probabilidade}%")
         st.write(f"ℹ️ {descricao}")
 
         st.write("<b>Palavras-chave em comum nos artigos mais citados da área identificada:</b>", unsafe_allow_html=True)
