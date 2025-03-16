@@ -122,9 +122,9 @@ def generate_report(suggested_phrases, top_keywords, tema, probabilidade, descri
     )
 
     content = [
-        Paragraph("<b>Relatório de Sugestão de Melhorias no Artigo</b>", styles['Title']),
+        Paragraph("<b>Relatório de Sugestão de Melhorias no Artigo - CitaIA - PEAS.Co</b>", styles['Title']),
         Paragraph(f"<b>Tema Identificado com base nas principais palavras do artigo:</b> {tema}", justified_style),
-        Paragraph(f"<b>Probabilidade do artigo ser uma referência:</b> {probabilidade}%", justified_style),
+        Paragraph(f"<b>Probabilidade do artigo ser uma referência (Cálculo feito com base no volume de artigos encontrados da área nos últimos 5 anos e a procura sobre o tema):</b> {probabilidade}%", justified_style),
         Paragraph(f"<b>Explicação:</b> {descricao}", justified_style)
     ]
 
@@ -133,7 +133,7 @@ def generate_report(suggested_phrases, top_keywords, tema, probabilidade, descri
         for item in suggested_phrases:
             content.append(Paragraph(f"• {item['phrase']}<br/><b>DOI:</b> {item['doi']}<br/><b>Link:</b> {item['link']}<br/><b>Citações:</b> {item.get('citationCount', 'N/A')}", justified_style))
 
-    content.append(Paragraph("<b>Palavras-chave recomendadas para adicionar ao artigo:</b>", styles['Heading3']))
+    content.append(Paragraph("<b>Palavras-chave em comum nos artigos mais citados da área identificada:</b>", styles['Heading3']))
     if top_keywords:
         for word in top_keywords:
             content.append(Paragraph(f"• {word}", justified_style))
@@ -169,10 +169,10 @@ def main():
         probabilidade, descricao = evaluate_article_relevance(publication_count)
 
         st.success(f"✅ Tema identificado: {tema}")
-        st.write(f"📈 Probabilidade de ser uma referência: {probabilidade}%")
+        st.write(f"📈 Probabilidade do artigo ser uma referência (Cálculo feito com base no volume de artigos encontrados da área nos últimos 5 anos e a procura sobre o tema): {probabilidade}%")
         st.write(f"ℹ️ {descricao}")
 
-        st.write("<b>Palavras-chave recomendadas para adicionar ao artigo:</b>", unsafe_allow_html=True)
+        st.write("<b>Palavras-chave em comum nos artigos mais citados da área identificada:</b>", unsafe_allow_html=True)
         if top_keywords:
             for word in top_keywords:
                 st.write(f"• {word}")
