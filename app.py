@@ -57,6 +57,14 @@ def get_popular_phrases(query, limit=10):
 
     return suggested_phrases
 
+# Função para extrair as 10 palavras mais importantes dos artigos
+def extract_top_keywords(suggested_phrases):
+    all_text = " ".join([item['phrase'] for item in suggested_phrases])
+    words = re.findall(r'\b\w+\b', all_text.lower())
+    words = [word for word in words if word not in STOP_WORDS and len(word) > 3]  # Filtra stopwords e palavras curtas
+    word_freq = Counter(words).most_common(10)
+    return [word for word, freq in word_freq]
+
 # Modelo PyTorch para prever chance de ser referência
 class ArticlePredictor(nn.Module):
     def __init__(self):
@@ -102,7 +110,7 @@ def identify_theme(user_text):
     return ", ".join([word for word, freq in keyword_freq])
 
 # Função para gerar relatório detalhado
-def generate_report(suggested_phrases, tema, probabilidade, descricao, output_path="report.pdf"):
+def generate_report(suggested_phrases, top_keywords, tema, probabilidade, descricao, output_path="report.pdf"):
     doc = SimpleDocTemplate(output_path, pagesize=A4)
     styles = getSampleStyleSheet()
 
@@ -125,6 +133,13 @@ def generate_report(suggested_phrases, tema, probabilidade, descricao, output_pa
         for item in suggested_phrases:
             content.append(Paragraph(f"• {item['phrase']}<br/><b>DOI:</b> {item['doi']}<br/><b>Link:</b> {item['link']}<br/><b>Citações:</b> {item.get('citationCount', 'N/A')}", justified_style))
 
+    content.append(Paragraph("<b>Palavras-chave recomendadas para adicionar ao artigo:</b>", styles['Heading3']))
+    if top_keywords:
+        for word in top_keywords:
+            content.append(Paragraph(f"• {word}", justified_style))
+    else:
+        content.append(Paragraph("Nenhuma palavra-chave relevante encontrada.", justified_style))
+
     doc.build(content)
 
 # Interface com Streamlit
@@ -146,6 +161,9 @@ def main():
         # Buscando artigos e frases populares com base no tema identificado
         suggested_phrases = get_popular_phrases(tema, limit=10)
 
+        # Extrair as 10 palavras mais importantes dos artigos
+        top_keywords = extract_top_keywords(suggested_phrases)
+
         # Calculando a probabilidade com base nas referências encontradas
         publication_count = len(suggested_phrases)
         probabilidade, descricao = evaluate_article_relevance(publication_count)
@@ -154,7 +172,14 @@ def main():
         st.write(f"📈 Probabilidade de ser uma referência: {probabilidade}%")
         st.write(f"ℹ️ {descricao}")
 
-        generate_report(suggested_phrases, tema, probabilidade, descricao)
+        st.write("<b>Palavras-chave recomendadas para adicionar ao artigo:</b>", unsafe_allow_html=True)
+        if top_keywords:
+            for word in top_keywords:
+                st.write(f"• {word}")
+        else:
+            st.write("Nenhuma palavra-chave relevante encontrada.")
+
+        generate_report(suggested_phrases, top_keywords, tema, probabilidade, descricao)
         with open("report.pdf", "rb") as file:
             st.download_button("📥 Baixar Relatório", file, "report.pdf")
 
