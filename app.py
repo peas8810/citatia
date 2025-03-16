@@ -97,14 +97,15 @@ class ArticlePredictor(nn.Module):
 def evaluate_article_relevance(publication_count):
     model = ArticlePredictor()
     data = torch.tensor([[publication_count]], dtype=torch.float32)
-    probability = model(data).item() * 100
+    probability = model(data).item() * 100  # Probabilidade em porcentagem
 
-    if publication_count >= 100:
-        descricao = "Há muitas publicações sobre este tema, reduzindo as chances do artigo se destacar."
-    elif 50 <= publication_count < 100:
-        descricao = "Este tema tem uma quantidade moderada de publicações. As chances de destaque são equilibradas."
+    # Ajuste da descrição com base na probabilidade
+    if probability >= 70:
+        descricao = "A probabilidade de este artigo se tornar uma referência é alta. Isso ocorre porque há poucas publicações sobre o tema, o que aumenta as chances de destaque."
+    elif 30 <= probability < 70:
+        descricao = "A probabilidade de este artigo se tornar uma referência é moderada. O tema tem uma quantidade equilibrada de publicações, o que mantém as chances de destaque em um nível intermediário."
     else:
-        descricao = "Há poucas publicações sobre este tema, aumentando consideravelmente as chances do artigo ser uma referência."
+        descricao = "A probabilidade de este artigo se tornar uma referência é baixa. Há muitas publicações sobre o tema, o que reduz as chances de destaque."
 
     return round(probability, 2), descricao
 
@@ -214,10 +215,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
- # Texto explicativo ao final da página
-    st.markdown("""
-    ---
-    Nosso avançado programa de detecção de plágio utiliza inteligência artificial para comparar textos com uma ampla base de dados composta pelos 100 maiores indexadores e repositórios globais, analisando cuidadosamente as similaridades encontradas. Com base em estudos internacionais, considera-se que uma taxa de similaridade de 3% ou mais indica uma alta concentração de trechos raros — ou seja, sequências de palavras pouco frequentes que apontam para uma possível cópia. Para ilustrar o processo de análise documental, imagine que um arquivo A tenha sido integralmente copiado de outro arquivo B. Ainda assim, a similaridade pode ser igual ou inferior a 50%, e não 100%, devido à variação na quantidade de trechos considerados na comparação. Pesquisas demonstram que uma taxa média de 3% ou mais costuma indicar uma elevada incidência de termos semelhantes, configurando, assim, uma possível ocorrência de plágio. É importante ressaltar que a avaliação final sobre a presença de plágio cabe sempre aos autores e responsáves pelo conteúdo.Para mais informações sobre práticas de integridade acadêmica, acesse [plagiarism.org](https://plagiarism.org).
-    """)
