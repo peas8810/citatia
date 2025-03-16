@@ -8,6 +8,9 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import nltk
 import re
 import requests
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
 nltk.download('stopwords')
 
@@ -22,69 +25,66 @@ def get_popular_phrases(query, limit=10):
     suggested_phrases = []
 
     # Pesquisa na API Semantic Scholar
-    semantic_params = {"query": query, "limit": limit, "fields": "title,abstract,url,externalIds"}
+    semantic_params = {"query": query, "limit": limit, "fields": "title,abstract,url,externalIds,citationCount"}
     semantic_response = requests.get(SEMANTIC_API, params=semantic_params)
 
-    total_articles_semantic = 0
     if semantic_response.status_code == 200:
         semantic_data = semantic_response.json().get("data", [])
-        total_articles_semantic = len(semantic_data)
         for item in semantic_data:
             suggested_phrases.append({
                 "phrase": f"{item.get('title', '')}. {item.get('abstract', '')}",
                 "doi": item['externalIds'].get('DOI', 'N/A'),
-                "link": item.get('url', 'N/A')
+                "link": item.get('url', 'N/A'),
+                "citationCount": item.get('citationCount', 0)
             })
 
     # Pesquisa na API CrossRef
     crossref_params = {"query": query, "rows": limit}
     crossref_response = requests.get(CROSSREF_API, params=crossref_params)
 
-    total_articles_crossref = 0
     if crossref_response.status_code == 200:
         crossref_data = crossref_response.json().get("message", {}).get("items", [])
-        total_articles_crossref = len(crossref_data)
         for item in crossref_data:
             suggested_phrases.append({
                 "phrase": f"{item.get('title', [''])[0]}. {item.get('abstract', '')}",
                 "doi": item.get('DOI', 'N/A'),
-                "link": item.get('URL', 'N/A')
+                "link": item.get('URL', 'N/A'),
+                "citationCount": item.get('is-referenced-by-count', 0)
             })
 
-    total_references = len(suggested_phrases)
-    total_articles = total_articles_semantic + total_articles_crossref
+    # Ordenar por número de citações
+    suggested_phrases.sort(key=lambda x: x.get('citationCount', 0), reverse=True)
 
-    return suggested_phrases, total_references, total_articles
+    return suggested_phrases
 
-# Função para gerar palavras com mais de 4 sílabas
-def get_complex_words(suggested_phrases):
-    all_phrases_text = " ".join([item['phrase'] for item in suggested_phrases])
-    words = re.findall(r'\b\w+\b', all_phrases_text.lower())
+# Modelo PyTorch para prever chance de ser referência
+class ArticlePredictor(nn.Module):
+    def __init__(self):
+        super(ArticlePredictor, self).__init__()
+        self.fc1 = nn.Linear(1, 16)
+        self.fc2 = nn.Linear(16, 8)
+        self.fc3 = nn.Linear(8, 1)
 
-    # Função para contar sílabas
-    def count_syllables(word):
-        vowels = "aeiouáéíóúãõâêîôû"
-        return sum(1 for char in word if char in vowels)
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = torch.sigmoid(self.fc3(x))
+        return x
 
-    complex_words = [word for word in words if count_syllables(word) > 4]
-    return list(set(complex_words))[:10]  # Limita a 10 palavras para manter a organização
+# Avalia a probabilidade do artigo se tornar uma referência
+def evaluate_article_relevance(publication_count):
+    model = ArticlePredictor()
+    data = torch.tensor([[publication_count]], dtype=torch.float32)
+    probability = model(data).item() * 100
 
-# Função para calcular a probabilidade com faixa percentual
-def evaluate_article_relevance(total_references, total_articles):
-    if total_articles == 0:
-        return 0.0, "Nenhum artigo encontrado para calcular a probabilidade."
+    if publication_count >= 100:
+        descricao = "Há muitas publicações sobre este tema, reduzindo as chances do artigo se destacar."
+    elif 50 <= publication_count < 100:
+        descricao = "Este tema tem uma quantidade moderada de publicações. As chances de destaque são equilibradas."
+    else:
+        descricao = "Há poucas publicações sobre este tema, aumentando consideravelmente as chances do artigo ser uma referência."
 
-    # Cálculo da probabilidade com faixas mais realistas
-    probability = (total_references / total_articles) * 100
-    faixa_min = max(5, probability - 10)
-    faixa_max = min(95, probability + 10)
-
-    descricao = "O tema apresenta uma probabilidade moderada de destaque." if 30 <= probability < 70 else \
-                "Poucas referências encontradas, o que pode indicar maior chance de originalidade." if probability < 30 else \
-                "O tema tem alta probabilidade de destaque, com muitas referências relacionadas."
-
-    probabilidade_faixa = f"{faixa_min:.2f}% a {faixa_max:.2f}%"
-    return probabilidade_faixa, descricao
+    return round(probability, 2), descricao
 
 # Função para extrair texto de um arquivo PDF
 def extract_text_from_pdf(pdf_path):
@@ -102,7 +102,7 @@ def identify_theme(user_text):
     return ", ".join([word for word, freq in keyword_freq])
 
 # Função para gerar relatório detalhado
-def generate_report(suggested_phrases, complex_words, tema, probabilidade, descricao, output_path="report.pdf"):
+def generate_report(suggested_phrases, tema, probabilidade, descricao, output_path="report.pdf"):
     doc = SimpleDocTemplate(output_path, pagesize=A4)
     styles = getSampleStyleSheet()
 
@@ -116,21 +116,14 @@ def generate_report(suggested_phrases, complex_words, tema, probabilidade, descr
     content = [
         Paragraph("<b>Relatório de Sugestão de Melhorias no Artigo</b>", styles['Title']),
         Paragraph(f"<b>Tema Identificado com base nas principais palavras do artigo:</b> {tema}", justified_style),
-        Paragraph(f"<b>Probabilidade do artigo ser uma referência:</b> {probabilidade}", justified_style),
+        Paragraph(f"<b>Probabilidade do artigo ser uma referência:</b> {probabilidade}%", justified_style),
         Paragraph(f"<b>Explicação:</b> {descricao}", justified_style)
     ]
 
     content.append(Paragraph("<b>Artigos mais acessados e/ou citados nos últimos 5 anos:</b>", styles['Heading3']))
     if suggested_phrases:
         for item in suggested_phrases:
-            content.append(Paragraph(f"• {item['phrase']}<br/><b>DOI:</b> {item['doi']}<br/><b>Link:</b> {item['link']}", justified_style))
-
-    content.append(Paragraph("<b>Palavras com mais de 4 sílabas sugeridas:</b>", styles['Heading3']))
-    if complex_words:
-        for word in complex_words:
-            content.append(Paragraph(f"• {word}", justified_style))
-    else:
-        content.append(Paragraph("Nenhuma palavra complexa relevante encontrada.", justified_style))
+            content.append(Paragraph(f"• {item['phrase']}<br/><b>DOI:</b> {item['doi']}<br/><b>Link:</b> {item['link']}<br/><b>Citações:</b> {item.get('citationCount', 'N/A')}", justified_style))
 
     doc.build(content)
 
@@ -151,19 +144,17 @@ def main():
         tema = identify_theme(user_text)
 
         # Buscando artigos e frases populares com base no tema identificado
-        suggested_phrases, total_references, total_articles = get_popular_phrases(tema, limit=10)
+        suggested_phrases = get_popular_phrases(tema, limit=10)
 
         # Calculando a probabilidade com base nas referências encontradas
-        probabilidade, descricao = evaluate_article_relevance(total_references, total_articles)
-
-        # Palavras com mais de 4 sílabas
-        complex_words = get_complex_words(suggested_phrases)
+        publication_count = len(suggested_phrases)
+        probabilidade, descricao = evaluate_article_relevance(publication_count)
 
         st.success(f"✅ Tema identificado: {tema}")
-        st.write(f"📈 Probabilidade de ser uma referência: {probabilidade}")
+        st.write(f"📈 Probabilidade de ser uma referência: {probabilidade}%")
         st.write(f"ℹ️ {descricao}")
 
-        generate_report(suggested_phrases, complex_words, tema, probabilidade, descricao)
+        generate_report(suggested_phrases, tema, probabilidade, descricao)
         with open("report.pdf", "rb") as file:
             st.download_button("📥 Baixar Relatório", file, "report.pdf")
 
