@@ -139,7 +139,7 @@ def generate_report(suggested_phrases, top_keywords, tema, probabilidade, descri
     content = [
         Paragraph("<b>Relatório de Sugestão de Melhorias no Artigo - CitatIA - PEAS.Co</b>", styles['Title']),
         Paragraph(f"<b>Tema Identificado com base nas principais palavras do artigo:</b> {tema}", justified_style),
-        Paragraph(f"<b>Probabilidade do artigo ser uma referência:</b> {probabilidade}%", justified_style),
+        Paragraph(f"<b>Probabilidade do artigo ser uma referência com base em fatores como palavras-chave e área de pesquisa:</b> {probabilidade}%", justified_style),
         Paragraph(f"<b>Explicação:</b> {descricao}", justified_style)
     ]
 
@@ -193,7 +193,7 @@ def main():
         monthly_counts, proportion_per_100 = get_publication_statistics(publication_count)
 
         st.success(f"✅ Tema identificado: {tema}")
-        st.write(f"📈 Probabilidade de ser uma referência: {probabilidade}%")
+        st.write(f"📈 Probabilidade do artigo ser uma referência com base em fatores como palavras-chave e área de pesquisa: {probabilidade}%")
         st.write(f"ℹ️ {descricao}")
 
         st.write("<b>Estatísticas de Publicações:</b>", unsafe_allow_html=True)
