@@ -215,3 +215,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# Texto explicativo ao final da página
+    st.markdown("""
+    ---
+    Nosso avançado programa de potencialização de artigos, utiliza inteligência artificial para comparar textos com uma ampla base de dados composta pelos 100 maiores indexadores e repositórios globais. Powered By - PEAS.Co
+    """)
