@@ -137,24 +137,24 @@ def generate_report(suggested_phrases, top_keywords, tema, probabilidade, descri
     )
 
     content = [
-        Paragraph("<b>Relatório de Sugestão de Melhorias no Artigo</b>", styles['Title']),
+        Paragraph("<b>Relatório de Sugestão de Melhorias no Artigo - CitatIA - PEAS.Co</b>", styles['Title']),
         Paragraph(f"<b>Tema Identificado com base nas principais palavras do artigo:</b> {tema}", justified_style),
         Paragraph(f"<b>Probabilidade do artigo ser uma referência:</b> {probabilidade}%", justified_style),
         Paragraph(f"<b>Explicação:</b> {descricao}", justified_style)
     ]
 
     content.append(Paragraph("<b>Estatísticas de Publicações:</b>", styles['Heading3']))
-    content.append(Paragraph(f"<b>Publicações mensais no último ano:</b>", justified_style))
+    content.append(Paragraph(f"<b>Publicações de artigos com mesmo tema:</b>", justified_style))
     for month, count in monthly_counts.items():
         content.append(Paragraph(f"• {month}: {count} publicações", justified_style))
     content.append(Paragraph(f"<b>Proporção de publicações a cada 100 artigos:</b> {proportion_per_100:.2f}%", justified_style))
 
-    content.append(Paragraph("<b>Artigos mais acessados e/ou citados nos últimos 5 anos:</b>", styles['Heading3']))
+    content.append(Paragraph("<b>Artigos mais acessados, baixados e/ou citados com base na tema:</b>", styles['Heading3']))
     if suggested_phrases:
         for item in suggested_phrases:
             content.append(Paragraph(f"• {item['phrase']}<br/><b>DOI:</b> {item['doi']}<br/><b>Link:</b> {item['link']}<br/><b>Citações:</b> {item.get('citationCount', 'N/A')}", justified_style))
 
-    content.append(Paragraph("<b>Palavras-chave recomendadas para adicionar ao artigo:</b>", styles['Heading3']))
+    content.append(Paragraph("<b>Palavras-chave mais citadas nos artigos mais acessados, baixados e/ou citados com base na tema:</b>", styles['Heading3']))
     if top_keywords:
         for word in top_keywords:
             content.append(Paragraph(f"• {word}", justified_style))
@@ -165,7 +165,7 @@ def generate_report(suggested_phrases, top_keywords, tema, probabilidade, descri
 
 # Interface com Streamlit
 def main():
-    st.title("CitatIA - Analisador de Artigos Acadêmicos")
+    st.title("CitatIA - Potencialiador de Artigos Acadêmicos")
     st.write("Faça o upload do seu arquivo PDF para iniciar a análise.")
 
     uploaded_file = st.file_uploader("Envie o arquivo PDF", type='pdf')
@@ -197,12 +197,12 @@ def main():
         st.write(f"ℹ️ {descricao}")
 
         st.write("<b>Estatísticas de Publicações:</b>", unsafe_allow_html=True)
-        st.write(f"<b>Publicações mensais no último ano:</b>", unsafe_allow_html=True)
+        st.write(f"<b>Publicações de artigos com mesmo tema:</b>", unsafe_allow_html=True)
         for month, count in monthly_counts.items():
             st.write(f"• {month}: {count} publicações")
         st.write(f"<b>Proporção de publicações a cada 100 artigos:</b> {proportion_per_100:.2f}%", unsafe_allow_html=True)
 
-        st.write("<b>Palavras-chave recomendadas para adicionar ao artigo:</b>", unsafe_allow_html=True)
+        st.write("<b>Palavras-chave mais citadas nos artigos mais acessados, baixados e/ou citados com base na tema:</b>", unsafe_allow_html=True)
         if top_keywords:
             for word in top_keywords:
                 st.write(f"• {word}")
