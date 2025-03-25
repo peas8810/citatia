@@ -1,7 +1,8 @@
-numpy
 streamlit
-pdfplumber
-nltk
 requests
+nltk
+pdfplumber
 torch
 reportlab
+Pillow
+openpyxl
