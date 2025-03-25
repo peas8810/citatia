@@ -211,7 +211,7 @@ def generate_report(suggested_phrases, top_keywords, tema, probabilidade, descri
 # Interface com Streamlit
 def main():
     st.title("CitatIA - Potencializador de Artigos - PEAS.Co")
-    st.write("Faça o upload do seu arquivo PDF para iniciar a análise.")
+   
 
     # Registro de usuário
     st.subheader("📋 Registro de Usuário")
