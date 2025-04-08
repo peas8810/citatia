@@ -291,3 +291,13 @@ st.markdown("""
 ---
 A PEAS.Co trabalha sem recursos governamentais ou privados, apenas de doações. Nos ajude com um PIX de qualquer valor, PIX: peas8810@gmail.com. Tem alguma ideia de programa com IA, nos envie um email que tentaremos fazer juntos! Nosso avançado programa de potencialização de artigos utiliza inteligência artificial para comparar textos com uma ampla base de dados composta pelos 100 maiores indexadores e repositórios globais. Powered By - PEAS.Co
 """)
+
+ # --- Seção de Propaganda ---
+    st.subheader("Publicidade - Anuncie Aqui - Envie email para peas8810@gmail.com")
+    # Exibição de imagem para propaganda (substitua a URL pela sua imagem)
+    image_url = "https://via.placeholder.com/728x90.png?text=Sua+Publicidade+Aqui"
+    st.image(image_url, caption="Anuncie aqui", use_container_width=True)
+    
+    # Incorporação de website (exemplo de iframe para propaganda)
+    st.markdown("### Anuncie seu website")
+    st.components.v1.iframe("https://example.com", height=250)
