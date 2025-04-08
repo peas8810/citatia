@@ -15,7 +15,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from datetime import datetime, timedelta
 
-
 nltk.download('stopwords')
 
 STOP_WORDS = set(stopwords.words('portuguese'))
@@ -39,7 +38,6 @@ def salvar_email_google_sheets(nome, email, codigo_verificacao):
     try:
         headers = {'Content-Type': 'application/json'}
         response = requests.post(URL_GOOGLE_SHEETS, json=dados, headers=headers)
-
         if response.text.strip() == "Sucesso":
             st.success("✅ E-mail, nome e código registrados com sucesso!")
         else:
@@ -74,7 +72,6 @@ def get_popular_phrases(query, limit=10):
     # Pesquisa na API Semantic Scholar
     semantic_params = {"query": query, "limit": limit, "fields": "title,abstract,url,externalIds,citationCount"}
     semantic_response = requests.get(SEMANTIC_API, params=semantic_params)
-
     if semantic_response.status_code == 200:
         semantic_data = semantic_response.json().get("data", [])
         for item in semantic_data:
@@ -88,7 +85,6 @@ def get_popular_phrases(query, limit=10):
     # Pesquisa na API CrossRef
     crossref_params = {"query": query, "rows": limit}
     crossref_response = requests.get(CROSSREF_API, params=crossref_params)
-
     if crossref_response.status_code == 200:
         crossref_data = crossref_response.json().get("message", {}).get("items", [])
         for item in crossref_data:
@@ -114,14 +110,10 @@ def extract_top_keywords(suggested_phrases):
 
 # Função para simular estatísticas de publicações mensais
 def get_publication_statistics(total_articles):
-    # Simula uma taxa de crescimento mensal com base no total de artigos
     start_date = datetime.now() - timedelta(days=365)  # Último ano
     publication_dates = [start_date + timedelta(days=random.randint(0, 365)) for _ in range(total_articles)]
     monthly_counts = Counter([date.strftime("%Y-%m") for date in publication_dates])
-
-    # Calcula a proporção de publicações a cada 100 artigos
-    proportion_per_100 = (total_articles / 100) * 100  # Simplesmente normaliza para 100
-
+    proportion_per_100 = (total_articles / 100) * 100  # Normaliza para 100
     return monthly_counts, proportion_per_100
 
 # Modelo PyTorch para prever chance de ser referência
@@ -133,8 +125,8 @@ class ArticlePredictor(nn.Module):
         self.fc3 = nn.Linear(8, 1)
 
     def forward(self, x):
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
+        x = torch.relu(self.fc1(x))
+        x = torch.relu(self.fc2(x))
         x = torch.sigmoid(self.fc3(x))
         return x
 
@@ -144,7 +136,6 @@ def evaluate_article_relevance(publication_count):
     data = torch.tensor([[publication_count]], dtype=torch.float32)
     probability = model(data).item() * 100  # Probabilidade em porcentagem
 
-    # Ajuste da descrição com base na probabilidade
     if probability >= 70:
         descricao = "A probabilidade de este artigo se tornar uma referência é alta. Isso ocorre porque há poucas publicações sobre o tema, o que aumenta as chances de destaque."
     elif 30 <= probability < 70:
@@ -177,29 +168,29 @@ def generate_report(suggested_phrases, top_keywords, tema, probabilidade, descri
     justified_style = ParagraphStyle(
         'Justified',
         parent=styles['BodyText'],
-        alignment=4,
+        alignment=4,  # Alinhamento justificado
         spaceAfter=10,
     )
 
     content = [
         Paragraph("<b>Relatório de Sugestão de Melhorias no Artigo - CitatIA - PEAS.Co</b>", styles['Title']),
         Paragraph(f"<b>Tema Identificado com base nas principais palavras do artigo:</b> {tema}", justified_style),
-        Paragraph(f"<b>Probabilidade do artigo ser uma referência com base em fatores como palavras-chave e área de pesquisa:</b> {probabilidade}%", justified_style),
+        Paragraph(f"<b>Probabilidade do artigo ser uma referência:</b> {probabilidade}%", justified_style),
         Paragraph(f"<b>Explicação:</b> {descricao}", justified_style)
     ]
 
     content.append(Paragraph("<b>Estatísticas de Publicações:</b>", styles['Heading3']))
-    content.append(Paragraph(f"<b>Publicações de artigos com mesmo tema:</b>", justified_style))
+    content.append(Paragraph("<b>Publicações de artigos com mesmo tema:</b>", justified_style))
     for month, count in monthly_counts.items():
         content.append(Paragraph(f"• {month}: {count} publicações", justified_style))
     content.append(Paragraph(f"<b>Proporção de publicações a cada 100 artigos:</b> {proportion_per_100:.2f}%", justified_style))
 
-    content.append(Paragraph("<b>Artigos mais acessados, baixados e/ou citados com base na tema:</b>", styles['Heading3']))
+    content.append(Paragraph("<b>Artigos mais acessados, baixados e/ou citados com base no tema:</b>", styles['Heading3']))
     if suggested_phrases:
         for item in suggested_phrases:
             content.append(Paragraph(f"• {item['phrase']}<br/><b>DOI:</b> {item['doi']}<br/><b>Link:</b> {item['link']}<br/><b>Citações:</b> {item.get('citationCount', 'N/A')}", justified_style))
 
-    content.append(Paragraph("<b>Palavras-chave mais citadas nos artigos mais acessados, baixados e/ou citados com base na tema:</b>", styles['Heading3']))
+    content.append(Paragraph("<b>Palavras-chave mais citadas nos artigos mais acessados:</b>", styles['Heading3']))
     if top_keywords:
         for word in top_keywords:
             content.append(Paragraph(f"• {word}", justified_style))
@@ -211,13 +202,11 @@ def generate_report(suggested_phrases, top_keywords, tema, probabilidade, descri
 # Interface com Streamlit
 def main():
     st.title("CitatIA - Potencializador de Artigos - PEAS.Co")
-   
-
+    
     # Registro de usuário
     st.subheader("📋 Registro de Usuário")
     nome = st.text_input("Nome completo")
     email = st.text_input("E-mail")
-
     if st.button("Salvar Dados"):
         if nome and email:
             codigo_verificacao = gerar_codigo_verificacao(email)
@@ -228,11 +217,9 @@ def main():
 
     # Upload do PDF
     uploaded_file = st.file_uploader("Envie o arquivo PDF", type='pdf')
-
     if uploaded_file:
         with open("uploaded_article.pdf", "wb") as f:
             f.write(uploaded_file.getbuffer())
-
         st.info("🔍 Analisando o arquivo...")
 
         user_text = extract_text_from_pdf("uploaded_article.pdf")
@@ -240,28 +227,22 @@ def main():
 
         # Buscando artigos e frases populares com base no tema identificado
         suggested_phrases = get_popular_phrases(tema, limit=10)
-
         # Extrair as 10 palavras mais importantes dos artigos
         top_keywords = extract_top_keywords(suggested_phrases)
-
         # Calculando a probabilidade com base nas referências encontradas
         publication_count = len(suggested_phrases)
         probabilidade, descricao = evaluate_article_relevance(publication_count)
-
         # Gerar estatísticas de publicações
         monthly_counts, proportion_per_100 = get_publication_statistics(publication_count)
 
         st.success(f"✅ Tema identificado: {tema}")
-        st.write(f"📈 Probabilidade do artigo ser uma referência com base em fatores como palavras-chave e área de pesquisa: {probabilidade}%")
+        st.write(f"📈 Probabilidade do artigo ser uma referência: {probabilidade}%")
         st.write(f"ℹ️ {descricao}")
-
         st.write("<b>Estatísticas de Publicações:</b>", unsafe_allow_html=True)
-        st.write(f"<b>Publicações de artigos com mesmo tema:</b>", unsafe_allow_html=True)
         for month, count in monthly_counts.items():
             st.write(f"• {month}: {count} publicações")
         st.write(f"<b>Proporção de publicações a cada 100 artigos:</b> {proportion_per_100:.2f}%", unsafe_allow_html=True)
-
-        st.write("<b>Palavras-chave mais citadas nos artigos mais acessados, baixados e/ou citados com base na tema:</b>", unsafe_allow_html=True)
+        st.write("<b>Palavras-chave mais citadas:</b>", unsafe_allow_html=True)
         if top_keywords:
             for word in top_keywords:
                 st.write(f"• {word}")
@@ -276,28 +257,30 @@ def main():
     # Verificação de código
     st.header("Verificar Autenticidade")
     codigo_digitado = st.text_input("Digite o código de verificação:")
-
     if st.button("Verificar Código"):
         if verificar_codigo_google_sheets(codigo_digitado):
             st.success("✅ Documento Autêntico e Original!")
         else:
             st.error("❌ Código inválido ou documento falsificado.")
 
-if __name__ == "__main__":
-    main()
+    # Texto explicativo ao final da página
+    st.markdown("""
+    ---
+    A PEAS.Co trabalha sem recursos governamentais ou privados, apenas de doações.
+    Nos ajude com um PIX de qualquer valor, PIX: peas8810@gmail.com.
+    Tem alguma ideia de programa com IA, nos envie um email que tentaremos fazer juntos!
+    Nosso avançado programa de potencialização de artigos utiliza inteligência artificial para comparar textos com uma ampla base de dados composta pelos 100 maiores indexadores e repositórios globais.
+    Powered By - PEAS.Co
+    """)
 
-# Texto explicativo ao final da página
-st.markdown("""
----
-A PEAS.Co trabalha sem recursos governamentais ou privados, apenas de doações. Nos ajude com um PIX de qualquer valor, PIX: peas8810@gmail.com. Tem alguma ideia de programa com IA, nos envie um email que tentaremos fazer juntos! Nosso avançado programa de potencialização de artigos utiliza inteligência artificial para comparar textos com uma ampla base de dados composta pelos 100 maiores indexadores e repositórios globais. Powered By - PEAS.Co
-""")
-
- # --- Seção de Propaganda ---
+    # --- Seção de Propaganda (ao final da página) ---
     st.subheader("Publicidade - Anuncie Aqui - Envie email para peas8810@gmail.com")
     # Exibição de imagem para propaganda (substitua a URL pela sua imagem)
     image_url = "https://via.placeholder.com/728x90.png?text=Sua+Publicidade+Aqui"
     st.image(image_url, caption="Anuncie aqui", use_container_width=True)
-    
     # Incorporação de website (exemplo de iframe para propaganda)
     st.markdown("### Anuncie seu website")
     st.components.v1.iframe("https://example.com", height=250)
+
+if __name__ == "__main__":
+    main()
