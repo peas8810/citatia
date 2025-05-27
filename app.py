@@ -266,10 +266,6 @@ def main():
     # Texto explicativo ao final da página
     st.markdown("""
     ---
-    A PEAS.Co trabalha sem recursos governamentais ou privados, apenas de doações.
-    Nos ajude com um PIX de qualquer valor, PIX: peas8810@gmail.com.
-    Tem alguma ideia de programa com IA, nos envie um email que tentaremos fazer juntos!
-    Nosso avançado programa de potencialização de artigos utiliza inteligência artificial para comparar textos com uma ampla base de dados composta pelos 100 maiores indexadores e repositórios globais.
     Powered By - PEAS.Co
     """)
 
