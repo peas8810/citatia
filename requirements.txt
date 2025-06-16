@@ -3,6 +3,8 @@ requests
 nltk
 pdfplumber
 torch
+torchvision
 reportlab
 Pillow
 openpyxl
+numpy
