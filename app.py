@@ -270,11 +270,7 @@ def main():
     """)
 
 
-if __name__ == "__main__":
-    main()
-
-
-   # --- Seção de Propaganda ---
+# --- Seção de Propaganda ---
 # Incorporação de website (exemplo de iframe para propaganda)
 st.markdown(
     "<h3><a href='https://peas8810.hotmart.host/product-page-1f2f7f92-949a-49f0-887c-5fa145e7c05d' target='_blank'>"
@@ -283,3 +279,10 @@ st.markdown(
     unsafe_allow_html=True
 )
 st.components.v1.iframe("https://pay.hotmart.com/U99934745U?off=y2b5nihy&hotfeature=51&_hi=eyJjaWQiOiIxNzQ4Mjk4OTUxODE2NzQ2NTc3ODk4OTY0NzUyNTAwIiwiYmlkIjoiMTc0ODI5ODk1MTgxNjc0NjU3Nzg5ODk2NDc1MjUwMCIsInNpZCI6ImM4OTRhNDg0MzJlYzRhZTk4MTNjMDJiYWE2MzdlMjQ1In0=.1748375599003&bid=1748375601381", height=250)
+
+
+if __name__ == "__main__":
+    main()
+
+
+   
