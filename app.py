@@ -280,7 +280,7 @@ st.markdown(
     """
     <h3 style='color: green;'>💚 Apoie Nosso Projeto!</h3>
     <p>Nosso site é mantido de forma independente e gratuita para todos os usuários. Temos custos com servidores, desenvolvimento e manutenção contínua.</p>
-    <p>Se este projeto tem te ajudado, considere fazer uma doação voluntária de <strong>R$ 20,00 via Pix</strong> para o e-mail: <strong>pesas8810@gmail.com</strong></p>
+    <p>Se este projeto tem te ajudado, considere fazer uma doação voluntária de <strong>R$ 20,00 via Pix</strong> para o e-mail: <strong>peas8810@gmail.com</strong></p>
     <p>Sua colaboração é fundamental para que possamos continuar oferecendo este serviço a todos!</p>
     """,
     unsafe_allow_html=True
