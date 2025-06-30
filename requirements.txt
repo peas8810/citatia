@@ -8,3 +8,5 @@ reportlab
 Pillow
 openpyxl
 numpy
+qrcode[pil]
+pillow
