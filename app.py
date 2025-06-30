@@ -270,19 +270,18 @@ def main():
     """)
 
 
-# --- Seção de Propaganda ---
-# Incorporação de website (exemplo de iframe para propaganda)
-st.markdown(
-    "<h3><a href='https://peas8810.hotmart.host/product-page-1f2f7f92-949a-49f0-887c-5fa145e7c05d' target='_blank'>"
-    "Técnica PROATIVA: Domine a Criação de Comandos Poderosos na IA e gere produtos monetizáveis"
-    "</a></h3>",
-    unsafe_allow_html=True
-)
-st.components.v1.iframe("https://pay.hotmart.com/U99934745U?off=y2b5nihy&hotfeature=51&_hi=eyJjaWQiOiIxNzQ4Mjk4OTUxODE2NzQ2NTc3ODk4OTY0NzUyNTAwIiwiYmlkIjoiMTc0ODI5ODk1MTgxNjc0NjU3Nzg5ODk2NDc1MjUwMCIsInNpZCI6ImM4OTRhNDg0MzJlYzRhZTk4MTNjMDJiYWE2MzdlMjQ1In0=.1748375599003&bid=1748375601381", height=250)
-
-
 if __name__ == "__main__":
     main()
 
 
-   
+# --- Seção de Apoio e Propaganda ---
+
+st.markdown(
+    """
+    <h3 style='color: green;'>💚 Apoie Nosso Projeto!</h3>
+    <p>Nosso site é mantido de forma independente e gratuita para todos os usuários. Temos custos com servidores, desenvolvimento e manutenção contínua.</p>
+    <p>Se este projeto tem te ajudado, considere fazer uma doação voluntária de <strong>R$ 20,00 via Pix</strong> para o e-mail: <strong>pesas8810@gmail.com</strong></p>
+    <p>Sua colaboração é fundamental para que possamos continuar oferecendo este serviço a todos!</p>
+    """,
+    unsafe_allow_html=True
+)   
