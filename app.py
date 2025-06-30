@@ -269,6 +269,11 @@ def main():
     Powered By - PEAS.Co
     """)
 
+
+if __name__ == "__main__":
+    main()
+
+
 # === Seção de Doação via Pix ===
 st.markdown("---")
 st.markdown(
@@ -304,9 +309,4 @@ qr_img = gerar_qr_code_pix(payload)
 st.image(qr_img, caption="📲 Escaneie o QR Code para doar via Pix (R$ 20,00)", width=300)
 
 st.success("🙏 Obrigado a todos que já contribuíram! Sua ajuda mantém este projeto vivo!")
-
-
-if __name__ == "__main__":
-    main()
-
 
