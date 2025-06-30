@@ -274,14 +274,38 @@ if __name__ == "__main__":
     main()
 
 
-# --- Seção de Apoio e Propaganda ---
+def gerar_qr_code_pix(payload):
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(payload)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    buffer.seek(0)
+    return Image.open(buffer)
 
+# --- Payload Pix Oficial (o seu) ---
+payload = "00020126400014br.gov.bcb.pix0118peas8810@gmail.com520400005303986540520.005802BR5925PEDRO EMILIO AMADOR SALOM6013TEOFILO OTONI62200516PEASTECHNOLOGIES6304C9DB"
+
+# --- Layout Streamlit ---
 st.markdown(
     """
-    <h3 style='color: green;'>💚 Apoie Nosso Projeto!</h3>
-    <p>Nosso site é mantido de forma independente e gratuita para todos os usuários. Temos custos com servidores, desenvolvimento e manutenção contínua.</p>
-    <p>Se este projeto tem te ajudado, considere fazer uma doação voluntária de <strong>R$ 20,00 via Pix</strong> para o e-mail: <strong>peas8810@gmail.com</strong></p>
-    <p>Sua colaboração é fundamental para que possamos continuar oferecendo este serviço a todos!</p>
+    <h3 style='color: green;'>💚 Apoie Este Projeto com um Pix!</h3>
+    <p>Temos custos com servidores, desenvolvimento e APIs. Se este site está te ajudando, considere uma contribuição de <strong>R$ 20,00</strong>.</p>
+    <p><strong>Chave Pix:</strong> <span style='color: blue;'>pesas8810@gmail.com</span></p>
+    <p><strong>Nome do recebedor:</strong> PEAS TECHNOLOGIES</p>
     """,
     unsafe_allow_html=True
-)   
+)
+
+# Exibe o QR Code
+qr_img = gerar_qr_code_pix(payload)
+st.image(qr_img, caption="📲 Escaneie o QR Code para doar via Pix (R$ 20,00)", width=300)
+
+# --- Agradecimento ---
+st.success("🙏 Obrigado a todos que já contribuíram! Sua ajuda mantém este projeto vivo!")
