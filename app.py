@@ -269,10 +269,17 @@ def main():
     Powered By - PEAS.Co
     """)
 
-
-if __name__ == "__main__":
-    main()
-
+# === Seção de Doação via Pix ===
+st.markdown("---")
+st.markdown(
+    """
+    <h3 style='color: green;'>💚 Apoie Este Projeto com um Pix!</h3>
+    <p>Temos custos com servidores, desenvolvimento e APIs. Se este site está te ajudando, considere uma contribuição de <strong>R$ 20,00</strong>.</p>
+    <p><strong>Chave Pix:</strong> <span style='color: blue;'>pesas8810@gmail.com</span></p>
+    <p><strong>Nome do recebedor:</strong> PEAS TECHNOLOGIES</p>
+    """,
+    unsafe_allow_html=True
+)
 
 def gerar_qr_code_pix(payload):
     qr = qrcode.QRCode(
@@ -289,23 +296,17 @@ def gerar_qr_code_pix(payload):
     buffer.seek(0)
     return Image.open(buffer)
 
-# --- Payload Pix Oficial (o seu) ---
+# Payload Pix Oficial
 payload = "00020126400014br.gov.bcb.pix0118peas8810@gmail.com520400005303986540520.005802BR5925PEDRO EMILIO AMADOR SALOM6013TEOFILO OTONI62200516PEASTECHNOLOGIES6304C9DB"
-
-# --- Layout Streamlit ---
-st.markdown(
-    """
-    <h3 style='color: green;'>💚 Apoie Este Projeto com um Pix!</h3>
-    <p>Temos custos com servidores, desenvolvimento e APIs. Se este site está te ajudando, considere uma contribuição de <strong>R$ 20,00</strong>.</p>
-    <p><strong>Chave Pix:</strong> <span style='color: blue;'>pesas8810@gmail.com</span></p>
-    <p><strong>Nome do recebedor:</strong> PEAS TECHNOLOGIES</p>
-    """,
-    unsafe_allow_html=True
-)
 
 # Exibe o QR Code
 qr_img = gerar_qr_code_pix(payload)
 st.image(qr_img, caption="📲 Escaneie o QR Code para doar via Pix (R$ 20,00)", width=300)
 
-# --- Agradecimento ---
 st.success("🙏 Obrigado a todos que já contribuíram! Sua ajuda mantém este projeto vivo!")
+
+
+if __name__ == "__main__":
+    main()
+
+
